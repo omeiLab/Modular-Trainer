@@ -9,7 +9,7 @@ class CaptureAfterStepHook(AfterStepHook):
     def __init__(self):
         self.records = []
 
-    def __call__(self, epoch, step, step_result):
+    def execute(self, epoch, step, step_result):
         self.records.append((epoch, step, step_result))
 
 

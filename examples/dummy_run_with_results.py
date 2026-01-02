@@ -6,7 +6,7 @@ from src.control.controller import Controller
 
 
 class DummyAfterStepHook(AfterStepHook):
-    def __call__(self, epoch, step, step_result):
+    def execute(self, epoch, step, step_result):
         print(
             f"[AfterStepHook] epoch={epoch}, step={step}, "
             f"step_result={step_result}"
