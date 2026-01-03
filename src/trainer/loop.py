@@ -1,6 +1,6 @@
-from hooks.before_epoch.base import CompositeBeforeEpochHook
-from hooks.after_step.base import CompositeAfterStepHook
-from hooks.after_epoch.base import CompositeAfterEpochHook
+from src.hooks.before_epoch.base import CompositeBeforeEpochHook
+from src.hooks.after_step.base import CompositeAfterStepHook
+from src.hooks.after_epoch.base import CompositeAfterEpochHook
 from src.control.controller import Controller
 
 class TrainerLoop:
@@ -43,13 +43,13 @@ class TrainerLoop:
         for epoch in range(num_epochs):
             self.before_epoch_hook.execute(epoch)
             for step in range(steps_per_epoch):
-                results = self._run_step(epoch, step)
-                self.after_step_hook.execute(epoch, step, results)
-                if not self.control.should_continue():
-                    return
-            self.after_epoch_hook.execute(epoch)
+                self.after_step_hook.execute(epoch, step)
+            results = self._run_step(epoch)
+            self.after_epoch_hook.execute(epoch, results)
+            if not self.control.should_continue():
+                return
             
-    def _run_step(self, epoch: int, step: int) -> dict:
+    def _run_step(self, epoch: int) -> dict:
         """
         Execute a single training step and return the step results.
 
@@ -58,12 +58,10 @@ class TrainerLoop:
 
         Args:
             epoch (int): Current epoch number.
-            step (int): Current step number.
 
         Returns:
             dict: Step results containing metrics such as loss.
         """
         return {
             "epoch": epoch,
-            "step": step,
         }

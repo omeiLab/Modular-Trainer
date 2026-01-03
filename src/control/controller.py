@@ -7,8 +7,12 @@ class Controller:
     learning rate scheduling, or checkpoint-based termination.
     """
     def __init__(self):
-        pass
+        self.stop_learning = False
+        
+    def stop(self):
+        """Hook can call this to request stopping the loop."""
+        self.stop_learning = True
     
     def should_continue(self) -> bool:
-        """Return True if the training loop should continue, False to stop."""
-        return True
+        """Loop calls this each step/epoch to decide whether to continue."""
+        return not self.stop_learning
