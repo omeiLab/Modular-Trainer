@@ -1,3 +1,5 @@
+from typing import List
+
 class BeforeEpochHook:
     """
     Hook that is called before the start of each epoch.
@@ -11,4 +13,15 @@ class BeforeEpochHook:
     
     def execute(self, epoch: int) -> None:
         """Execute the hook for the given epoch."""
-        print(f"Epoch {epoch}: before_epoch hook triggered")
+        return None
+        
+class CompositeBeforeEpochHook(BeforeEpochHook):
+    def __init__(self, hooks: List[BeforeEpochHook]):
+        """Initialize the composite hook with a list of hooks."""
+        self.hooks = hooks
+        
+    def execute(self, epoch: int) -> None:
+        """Execute all hooks in the list iteratively."""
+        for hook in self.hooks:
+            hook.execute(epoch)
+    

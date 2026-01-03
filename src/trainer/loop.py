@@ -1,6 +1,6 @@
-from hooks.before_epoch.base import BeforeEpochHook
-from hooks.after_step.base import AfterStepHook
-from hooks.after_epoch.base import AfterEpochHook
+from hooks.before_epoch.base import CompositeBeforeEpochHook
+from hooks.after_step.base import CompositeAfterStepHook
+from hooks.after_epoch.base import CompositeAfterEpochHook
 from src.control.controller import Controller
 
 class TrainerLoop:
@@ -13,18 +13,18 @@ class TrainerLoop:
     """
     def __init__(
         self, 
-        before_epoch_hook: BeforeEpochHook, 
-        after_step_hook: AfterStepHook, 
-        after_epoch_hook: AfterEpochHook, 
+        before_epoch_hook: CompositeBeforeEpochHook, 
+        after_step_hook: CompositeAfterStepHook, 
+        after_epoch_hook: CompositeAfterEpochHook, 
         control: Controller
     ):
         """
         Initialize the TrainerLoop with hooks and a controller.
 
         Args:
-            before_epoch_hook (BeforeEpochHook): Hook to execute before each epoch.
-            after_step_hook (AfterStepHook): Hook to execute after each step.
-            after_epoch_hook (AfterEpochHook): Hook to execute after each epoch.
+            before_epoch_hook (CompositeBeforeEpochHook): Hooks to execute before each epoch.
+            after_step_hook (CompositeAfterStepHook): Hooks to execute after each step.
+            after_epoch_hook (CompositeAfterEpochHook): Hooks to execute after each epoch.
             control (Controller): Controller to query for stopping criteria.
         """
         self.before_epoch_hook = before_epoch_hook

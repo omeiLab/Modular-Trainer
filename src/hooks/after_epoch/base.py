@@ -1,3 +1,5 @@
+from typing import List
+
 class AfterEpochHook:
     """
     Hook that is called after the completion of each epoch.
@@ -11,4 +13,14 @@ class AfterEpochHook:
     
     def execute(self, epoch: int) -> None:
         """Execute the hook for the given epoch."""
-        print(f"Epoch {epoch}: after_epoch hook triggered")
+        return None
+        
+class CompositeAfterEpochHook(AfterEpochHook):
+    def __init__(self, hooks: List[AfterEpochHook]):
+        """Initialize the composite hook with a list of hooks."""
+        self.hooks = hooks
+        
+    def execute(self, epoch: int) -> None:
+        """Execute all hooks in the list iteratively."""
+        for hook in self.hooks:
+            hook.execute(epoch)
