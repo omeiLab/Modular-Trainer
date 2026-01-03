@@ -1,7 +1,7 @@
 from src.trainer.loop import TrainerLoop
-from src.hooks.before_epoch import BeforeEpochHook
-from src.hooks.after_step import AfterStepHook
-from src.hooks.after_epoch import AfterEpochHook
+from hooks.before_epoch.base import BeforeEpochHook
+from hooks.after_step.base import AfterStepHook
+from hooks.after_epoch.base import AfterEpochHook
 from src.control.controller import Controller
 
 
@@ -9,8 +9,8 @@ class CaptureAfterStepHook(AfterStepHook):
     def __init__(self):
         self.records = []
 
-    def execute(self, epoch, step, step_result):
-        self.records.append((epoch, step, step_result))
+    def execute(self, epoch, step, results):
+        self.records.append((epoch, step, results))
 
 
 class DummyTrainerLoop(TrainerLoop):
