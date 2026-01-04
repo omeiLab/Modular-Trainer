@@ -41,8 +41,7 @@ class AfterEpochEarlyStopHook(AfterEpochHook):
             - Calls controller.stop() if no improvement for `patience` epochs.
         """
         if self.metric not in results:
-            print(f"[WARNING] The metric {self.metric} is not in the results. Early Stopping will not work in this case.")
-            return None
+            raise ValueError(f"Metric {self.metric} not found in results")
         score = results[self.metric]
         improved = False
         if self.maximize:

@@ -7,6 +7,7 @@ from src.hooks.before_epoch.base import CompositeBeforeEpochHook
 from src.hooks.after_epoch.base import CompositeAfterEpochHook, AfterEpochHook
 from src.hooks.after_epoch.early_stop import AfterEpochEarlyStopHook
 from src.hooks.after_epoch.logger import AfterEpochLoggerHook
+from src.hooks.after_epoch.checkpoint import AfterEpochCheckpointHook
 from src.hooks.after_step.base import CompositeAfterStepHook
 
 # ----------------------------
@@ -36,6 +37,10 @@ class DummyTrainerLoop(TrainerLoop):
 # Controller
 controller = Controller()
 
+# callable checkpoint
+def save_fn(epoch, results):
+    print(f"[Checkpoint] Saving checkpoint at epoch {epoch}")
+
 # Hooks
 logger_hook = AfterEpochLoggerHook()
 early_stop_hook = AfterEpochEarlyStopHook(
@@ -45,9 +50,15 @@ early_stop_hook = AfterEpochEarlyStopHook(
     maximize=False,
     min_delta=0.01
 )
+checkpoint_hook = AfterEpochCheckpointHook(
+    monitor="loss",
+    save_fn=save_fn,
+    maximize=False,
+    min_delta=0.01
+)
 
 # CompositeAfterEpochHook
-after_epoch_hooks = CompositeAfterEpochHook([logger_hook, early_stop_hook])
+after_epoch_hooks = CompositeAfterEpochHook([logger_hook, early_stop_hook, checkpoint_hook])
 
 # CompositeBeforeEpochHook (empty for now)
 before_epoch_hooks = CompositeBeforeEpochHook([])
