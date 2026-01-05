@@ -2,6 +2,7 @@ from src.hooks.before_epoch.base import CompositeBeforeEpochHook
 from src.hooks.after_step.base import CompositeAfterStepHook
 from src.hooks.after_epoch.base import CompositeAfterEpochHook
 from src.control.controller import Controller
+from src.trainer.result_builder import EpochResultBuilder 
 
 class TrainerLoop:
     """
@@ -16,7 +17,8 @@ class TrainerLoop:
         before_epoch_hook: CompositeBeforeEpochHook, 
         after_step_hook: CompositeAfterStepHook, 
         after_epoch_hook: CompositeAfterEpochHook, 
-        control: Controller
+        control: Controller,
+        result_builder: EpochResultBuilder
     ):
         """
         Initialize the TrainerLoop with hooks and a controller.
@@ -26,11 +28,13 @@ class TrainerLoop:
             after_step_hook (CompositeAfterStepHook): Hooks to execute after each step.
             after_epoch_hook (CompositeAfterEpochHook): Hooks to execute after each epoch.
             control (Controller): Controller to query for stopping criteria.
+            result_builder (EpochResultBuilder): Builder to record and build the metrices for each epoch.
         """
         self.before_epoch_hook = before_epoch_hook
         self.after_step_hook = after_step_hook
         self.after_epoch_hook = after_epoch_hook
         self.control = control
+        self.result_builder = result_builder
     
     def run(self, num_epochs: int, steps_per_epoch: int) -> None:
         """
@@ -41,15 +45,17 @@ class TrainerLoop:
             steps_per_epoch (int): Number of steps per epoch.
         """
         for epoch in range(num_epochs):
+            self.result_builder.reset()
             self.before_epoch_hook.execute(epoch)
             for step in range(steps_per_epoch):
+                self._run_step(epoch)
                 self.after_step_hook.execute(epoch, step)
-            results = self._run_step(epoch)
+            results = self.result_builder.build()
             self.after_epoch_hook.execute(epoch, results)
             if not self.control.should_continue():
                 return
             
-    def _run_step(self, epoch: int) -> dict:
+    def _run_step(self, epoch: int) -> None:
         """
         Execute a single training step and return the step results.
 
@@ -62,6 +68,7 @@ class TrainerLoop:
         Returns:
             dict: Step results containing metrics such as loss.
         """
-        return {
+        results = {
             "epoch": epoch,
         }
+        self.result_builder.record(results)

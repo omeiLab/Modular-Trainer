@@ -1,6 +1,6 @@
 from src.hooks.after_epoch.base import AfterEpochHook
 from src.control.controller import Controller
-from typing import Dict
+from typing import Mapping, Any
 import numpy as np
 
 class AfterEpochEarlyStopHook(AfterEpochHook):
@@ -27,7 +27,7 @@ class AfterEpochEarlyStopHook(AfterEpochHook):
         self.best_score = -np.inf if maximize else np.inf
         self.no_improved_count = 0
         
-    def execute(self, epoch: int, results: Dict[str, int | float]) -> None:
+    def execute(self, epoch: int, results: Mapping[str, Any]) -> None:
         """
         Execute the early stopping check at the end of an epoch.
 

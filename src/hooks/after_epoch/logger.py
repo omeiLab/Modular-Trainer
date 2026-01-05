@@ -1,5 +1,5 @@
 from src.hooks.after_epoch.base import AfterEpochHook
-from typing import Dict
+from typing import Mapping, Any
 
 class AfterEpochLoggerHook(AfterEpochHook):
     """
@@ -9,7 +9,7 @@ class AfterEpochLoggerHook(AfterEpochHook):
     if it exists in the step_result dictionary. It does not modify the 
     training loop or step results.
     """
-    def execute(self, epoch: int, results: Dict[str, int | float]) -> None:
+    def execute(self, epoch: int, results: Mapping[str, Any]) -> None:
         if "loss" in results:
             print(f"[LOG] loss: {results['loss']}")
         else:

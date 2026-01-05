@@ -1,7 +1,8 @@
-from typing import Dict
+from typing import Dict, Mapping, Any
 import numpy as np
 
 from src.trainer.loop import TrainerLoop
+from src.trainer.result_builder import EpochResultBuilder
 from src.control.controller import Controller
 from src.hooks.before_epoch.base import CompositeBeforeEpochHook
 from src.hooks.after_epoch.base import CompositeAfterEpochHook, AfterEpochHook
@@ -15,21 +16,17 @@ from src.hooks.after_step.base import CompositeAfterStepHook
 # ----------------------------
 class LoggerAfterEpochHook(AfterEpochHook):
     """Simple logger that prints metrics at the end of each epoch."""
-    def execute(self, epoch: int, results: Dict[str, int | float]) -> None:
+    def execute(self, epoch: int, results: Mapping[str, Any]) -> None:
         print(f"[Logger] Epoch {epoch} metrics: {results}")
 
 # ----------------------------
 # Dummy TrainerLoop with aggregated epoch results
 # ----------------------------
 class DummyTrainerLoop(TrainerLoop):
-    def _run_step(self, epoch: int) -> Dict[str, float]:
+    def _run_step(self, epoch: int):
         # dummy step returns random loss for demonstration
-        return {"loss": np.random.rand() * (1.0 - 0.05 * epoch)}  # decreasing roughly
-
-    def aggregate_epoch_results(self, epoch: int, steps_per_epoch: int) -> Dict[str, float]:
-        # simulate validation loss decreasing each epoch
-        val_loss = 1.0 - 0.1 * epoch
-        return {"val_loss": val_loss}
+        results =  {"loss": np.random.rand() * (1.0 - 0.05 * epoch)}  # decreasing roughly
+        self.result_builder.record(results)
 
 # ----------------------------
 # Setup dummy run
@@ -51,7 +48,7 @@ early_stop_hook = AfterEpochEarlyStopHook(
     min_delta=0.01
 )
 checkpoint_hook = AfterEpochCheckpointHook(
-    monitor="loss",
+    metric="loss",
     save_fn=save_fn,
     maximize=False,
     min_delta=0.01
@@ -66,12 +63,16 @@ before_epoch_hooks = CompositeBeforeEpochHook([])
 # CompositeAfterStepHook (empty for now)
 after_step_hooks = CompositeAfterStepHook([])
 
+# EpochResultBuilder
+result_builder = EpochResultBuilder()
+
 # Dummy trainer loop
 trainer_loop = DummyTrainerLoop(
     before_epoch_hook=before_epoch_hooks,
     after_step_hook=after_step_hooks,  
     after_epoch_hook=after_epoch_hooks,
-    control=controller
+    control=controller,
+    result_builder=result_builder
 )
 
 # Run dummy training

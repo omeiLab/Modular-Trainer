@@ -1,7 +1,6 @@
 from src.hooks.after_epoch.base import AfterEpochHook
-from src.control.controller import Controller
 import numpy as np
-from typing import Callable, Dict
+from typing import Callable, Mapping
 
 class AfterEpochCheckpointHook(AfterEpochHook):
     """
@@ -20,8 +19,8 @@ class AfterEpochCheckpointHook(AfterEpochHook):
 
     def __init__(
         self,
-        monitor: str,
-        save_fn: Callable[[int, Dict[str, float]], None],
+        metric: str,
+        save_fn: Callable[[int, Mapping[str, float]], None],
         maximize: bool = True,
         min_delta: float = 0.0,
     ):
@@ -29,7 +28,7 @@ class AfterEpochCheckpointHook(AfterEpochHook):
         Initialize the checkpoint hook.
 
         Args:
-            monitor (str): Name of the metric to monitor (e.g., "val_loss").
+            metric (str): Name of the metric to monitor (e.g., "val_loss").
             save_fn (Callable): Function to call when a new best score is achieved.
                 The function should accept (epoch, results) as arguments.
             maximize (bool): Whether a higher metric value indicates improvement.
@@ -37,13 +36,13 @@ class AfterEpochCheckpointHook(AfterEpochHook):
             min_delta (float): Minimum change in the monitored metric to qualify
                 as an improvement.
         """
-        self.monitor = monitor
+        self.metric = metric
         self.save_fn = save_fn
         self.maximize = maximize
         self.min_delta = min_delta
         self.best_score = -np.inf if maximize else np.inf
 
-    def execute(self, epoch: int, results: Dict[str, float]) -> None:
+    def execute(self, epoch: int, results: Mapping[str, float]) -> None:
         """
         Execute the checkpoint logic after an epoch.
 
@@ -54,14 +53,14 @@ class AfterEpochCheckpointHook(AfterEpochHook):
         Raises:
             ValueError: If the monitored metric is not found in results.
         """
-        if self.monitor not in results:
+        if self.metric not in results:
             raise ValueError(
                 f"[{self.__class__.__name__}] "
-                f"Monitor '{self.monitor}' not found in results. "
+                f"Monitor '{self.metric}' not found in results. "
                 f"Available metrics: {list(results.keys())}"
             )
 
-        current = results[self.monitor]
+        current = results[self.metric]
 
         if self.maximize:
             improve = current > self.best_score + self.min_delta
