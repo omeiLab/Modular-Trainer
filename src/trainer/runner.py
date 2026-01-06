@@ -88,7 +88,7 @@ class Runner:
         avg_val_loss = total_loss / len(self.val_loader)
         return {'val_loss': avg_val_loss}
 
-    def run(self):
+    def run_one_epoch(self):
         """
         Run one epoch of train + validation, recording metrics to the result builder.
 
