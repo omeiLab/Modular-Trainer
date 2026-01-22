@@ -4,6 +4,7 @@ from src.hooks.after_epoch.base import CompositeAfterEpochHook
 from src.control.controller import Controller
 from src.trainer.result_builder import EpochResultBuilder 
 from src.trainer.runner import Runner
+from typing import Mapping, Any
 
 class TrainerLoop:
     """
@@ -61,12 +62,12 @@ class TrainerLoop:
             if not self.control.should_continue():
                 return
             
-    def _run_epoch(self) -> dict:
+    def _run_epoch(self) -> Mapping[str, Any]:
         """
         Execute a single epoch using the Runner and collect epoch-level metrics.
 
         Returns:
             dict: Aggregated epoch metrics (train + validation) from the Runner.
         """
-        epoch_results = self.runner.run()
+        epoch_results = self.runner.run_one_epoch()
         return epoch_results

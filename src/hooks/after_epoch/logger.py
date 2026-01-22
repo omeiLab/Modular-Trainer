@@ -10,7 +10,7 @@ class AfterEpochLoggerHook(AfterEpochHook):
     training loop or step results.
     """
     def execute(self, epoch: int, results: Mapping[str, Any]) -> None:
-        if "loss" in results:
-            print(f"[LOG] loss: {results['loss']}")
+        if "val_loss" in results:
+            print(f"[LOG] loss: {results['val_loss']}")
         else:
             print("No loss value found in results")

@@ -1,8 +1,9 @@
 import torch
 from torch.utils.data import DataLoader
 from torch.nn import Module
-from torch.optim import Optimizer
+from torch.optim.optimizer import Optimizer
 from src.trainer.result_builder import EpochResultBuilder
+from typing import Callable
 
 class Runner:
     """
@@ -21,7 +22,7 @@ class Runner:
         self,
         model: Module,
         optimizer: Optimizer,
-        loss_fn: callable,
+        loss_fn: Callable,
         train_loader: DataLoader,
         val_loader: DataLoader,
         result_builder: EpochResultBuilder,
