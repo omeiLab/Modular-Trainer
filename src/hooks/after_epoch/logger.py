@@ -1,5 +1,13 @@
 from src.hooks.after_epoch.base import AfterEpochHook
 from typing import Mapping, Any
+from dataclasses import dataclass
+
+@dataclass
+class LoggerConfig:
+    verbose: int = 1
+    
+    def enabled(self) -> bool:
+        return self.verbose > 0
 
 class AfterEpochLoggerHook(AfterEpochHook):
     """

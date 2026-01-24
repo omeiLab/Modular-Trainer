@@ -2,6 +2,17 @@ from src.hooks.after_epoch.base import AfterEpochHook
 from src.control.controller import Controller
 from typing import Mapping, Any
 import numpy as np
+from dataclasses import dataclass
+
+@dataclass
+class EarlyStopConfig:
+    patience: int = 0
+    metric: str = "loss"
+    maximize: bool = False
+    min_delta: float = 0.0
+    
+    def enabled(self) -> bool:
+        return self.patience > 0
 
 class AfterEpochEarlyStopHook(AfterEpochHook):
     """
@@ -18,7 +29,13 @@ class AfterEpochEarlyStopHook(AfterEpochHook):
         best_score (float): Best observed metric value.
         no_improved_count (int): Counter of consecutive epochs without improvement.
     """
-    def __init__(self, controller: Controller, patience: int, metric: str, maximize: bool = True, min_delta: float = 0.0):
+    def __init__(
+        self, controller: Controller, 
+        patience: int = 0, 
+        metric: str = "loss", 
+        maximize: bool = False, 
+        min_delta: float = 0.0
+    ):
         self.controller = controller
         self.patience = patience
         self.metric = metric

@@ -1,6 +1,17 @@
 from src.hooks.after_epoch.base import AfterEpochHook
 import numpy as np
-from typing import Callable, Mapping
+from dataclasses import dataclass
+from typing import Callable, Optional, Any, Mapping
+
+@dataclass
+class CheckpointConfig:
+    metric: str = "loss"
+    maximize: bool = False
+    min_delta: float = 0.0
+    save_fn: Optional[Callable[[int, Mapping[str, Any]], None]] = None
+
+    def enabled(self) -> bool:
+        return self.save_fn is not None
 
 class AfterEpochCheckpointHook(AfterEpochHook):
     """
