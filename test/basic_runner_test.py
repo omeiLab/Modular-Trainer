@@ -1,4 +1,4 @@
-from src.pipeline.builder import build_trainer
+from trainer.trainer import build_trainer
 from test.dataset import ToyRegressionDataset, create_dataloader
 from test.model import SimpleDenseModel
 import torch

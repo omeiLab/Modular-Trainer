@@ -1,17 +1,14 @@
 from src.hooks.after_epoch.base import AfterEpochHook
 import numpy as np
 from dataclasses import dataclass
-from typing import Callable, Optional, Any, Mapping
+from typing import Mapping
+import torch.nn as nn
 
 @dataclass
 class CheckpointConfig:
     metric: str = "loss"
     maximize: bool = False
     min_delta: float = 0.0
-    save_fn: Optional[Callable[[int, Mapping[str, Any]], None]] = None
-
-    def enabled(self) -> bool:
-        return self.save_fn is not None
 
 class AfterEpochCheckpointHook(AfterEpochHook):
     """
@@ -30,8 +27,8 @@ class AfterEpochCheckpointHook(AfterEpochHook):
 
     def __init__(
         self,
+        model: nn.Module,
         metric: str,
-        save_fn: Callable[[int, Mapping[str, float]], None],
         maximize: bool = True,
         min_delta: float = 0.0,
     ):
@@ -47,12 +44,16 @@ class AfterEpochCheckpointHook(AfterEpochHook):
             min_delta (float): Minimum change in the monitored metric to qualify
                 as an improvement.
         """
+        self.model = model
         self.metric = metric
-        self.save_fn = save_fn
         self.maximize = maximize
         self.min_delta = min_delta
         self.best_score = -np.inf if maximize else np.inf
-
+        
+    # dummy implementation, overwrite for real implementation
+    def save_fn(self, epoch: int) -> None:
+        print(f"[Checkpoint] Saving checkpoint at epoch {epoch}")
+        
     def execute(self, epoch: int, results: Mapping[str, float]) -> None:
         """
         Execute the checkpoint logic after an epoch.
@@ -80,4 +81,4 @@ class AfterEpochCheckpointHook(AfterEpochHook):
 
         if improve:
             self.best_score = current
-            self.save_fn(epoch, results)
+            self.save_fn(epoch)
