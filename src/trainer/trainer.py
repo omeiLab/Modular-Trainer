@@ -1,18 +1,20 @@
-from typing import Callable
+from typing import Callable, Optional
 import numpy as np
 from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim.optimizer as optim
+import yaml
 
 from src.trainer.loop import TrainerLoop
 from src.trainer.runner import Runner
 from src.trainer.result_builder import EpochResultBuilder
+from src.trainer.config import TrainerConfig
 from src.control.controller import Controller
 from src.hooks.before_epoch.base import CompositeBeforeEpochHook
 from src.hooks.after_epoch.base import CompositeAfterEpochHook
-from src.hooks.after_epoch.early_stop import AfterEpochEarlyStopHook
-from src.hooks.after_epoch.logger import AfterEpochLoggerHook
-from src.hooks.after_epoch.checkpoint import AfterEpochCheckpointHook
+from src.hooks.after_epoch.early_stop import AfterEpochEarlyStopHook, EarlyStopConfig
+from src.hooks.after_epoch.logger import AfterEpochLoggerHook, LoggerConfig
+from src.hooks.after_epoch.checkpoint import AfterEpochCheckpointHook, CheckpointConfig
 from src.hooks.after_step.base import CompositeAfterStepHook
 
 class Trainer:
@@ -30,6 +32,7 @@ class Trainer:
         loss_fn: Callable,
         train_loader: DataLoader,
         val_loader: DataLoader,
+        config_path: Optional[str] = None
     ):
         """
         Initialize the Trainer with core components.
@@ -46,8 +49,10 @@ class Trainer:
         self.loss_fn = loss_fn
         self.train_loader = train_loader
         self.val_loader = val_loader
+        self.config_path = config_path
+        self.generate_config()
 
-    def from_config(self, config_path: str) -> None:
+    def generate_config(self) -> None:
         """
         Load hyperparameters and hook settings from a YAML/JSON config.
 
@@ -56,13 +61,23 @@ class Trainer:
         - hook parameters (early stopping, checkpointing, etc.)
         - metrics to track
         - any other training hyperparameters
-
-        Args:
-            config_path (str): Path to config file.
         """
-        # TODO: parse config and store internally
-        pass
-
+        config = TrainerConfig()
+        if self.config_path:
+            config = config.from_yaml(self.config_path)
+            
+        # LoggerConfig
+        self.log_config = LoggerConfig(verbose=config.verbose)
+        
+        # EarlyStopConfig
+        self.es_config = EarlyStopConfig(patience=config.early_stop_patience, metric=config.early_stop_metric, min_delta=config.early_stop_min_delta)
+        
+        # CheckpointConfig
+        self.ckpt_config = CheckpointConfig(metric=config.checkpoint_metric, min_delta=config.checkpoint_min_delta)
+        
+        # Other hyperparameters
+        self.num_epochs = config.num_epochs
+                
     def build(self) -> None:
         """
         Construct hooks, result builder, runner, and training loop.
@@ -73,27 +88,37 @@ class Trainer:
         controller = Controller()
 
         # Before-epoch hooks
-        before_epoch_hooks = CompositeBeforeEpochHook([])
+        before_epoch_hooks_lst = []
+        before_epoch_hooks = CompositeBeforeEpochHook(before_epoch_hooks_lst)
 
         # After-step hooks
-        after_step_hooks = CompositeAfterStepHook([])
+        after_step_hooks_lst = []
+        after_step_hooks = CompositeAfterStepHook(after_step_hooks_lst)
 
         # After-epoch hooks
-        logger_hook = AfterEpochLoggerHook()
-        early_stop_hook = AfterEpochEarlyStopHook(
-            controller=controller,
-            patience=2,  # stop if val_loss doesn't improve for 2 epochs
-            metric="val_loss",
-            maximize=False,
-            min_delta=0.0001
-        )
+        after_epoch_hooks_lst = []
+        if self.log_config.enabled():
+            logger_hook = AfterEpochLoggerHook()
+            after_epoch_hooks_lst.append(logger_hook)
+        
+        if self.es_config.enabled():
+            early_stop_hook = AfterEpochEarlyStopHook(
+                controller=controller,
+                patience=self.es_config.patience,
+                metric=self.es_config.metric,
+                maximize=self.es_config.maximize,
+                min_delta=self.es_config.min_delta
+            )
+            after_epoch_hooks_lst.append(early_stop_hook)
+        
         checkpoint_hook = AfterEpochCheckpointHook(
             model=self.model,
-            metric="val_loss",
-            maximize=False,
-            min_delta=0.0001
+            metric=self.ckpt_config.metric,
+            maximize=self.ckpt_config.maximize,
+            min_delta=self.ckpt_config.min_delta
         )
-        after_epoch_hooks = CompositeAfterEpochHook([logger_hook, early_stop_hook, checkpoint_hook])
+        after_epoch_hooks_lst.append(checkpoint_hook)
+        after_epoch_hooks = CompositeAfterEpochHook(after_epoch_hooks_lst)
 
         # EpochResultBuilder
         result_builder = EpochResultBuilder()
@@ -121,5 +146,5 @@ class Trainer:
         Returns:
             nn.Module: Trained PyTorch model.
         """
-        self.trainer_loop.run(num_epochs=10)
+        self.trainer_loop.run(self.num_epochs)
         return self.model
