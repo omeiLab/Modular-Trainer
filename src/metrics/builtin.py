@@ -1,35 +1,35 @@
-import numpy as np
-from metrics.database import Metric, MetricSpec
+import torch
+from src.metrics.database import Metric, MetricSpec
 
 EPS = 1e-12
 
 def mean_squared_error(*, preds, targets, **_):
-    return np.mean((preds - targets) ** 2)
+    return torch.mean((preds - targets) ** 2).item()
 
 def root_mean_squared_error(*, preds, targets, **_):
-    return np.sqrt(np.mean((preds - targets) ** 2))
+    return torch.sqrt(torch.mean((preds - targets) ** 2)).item()
 
 def mean_absolute_error(*, preds, targets, **_):
-    return np.mean(np.abs(preds - targets))
+    return torch.mean(torch.abs(preds - targets)).item()
 
 def r_squared(*, preds, targets, **_):
-    mean = np.mean(targets)
-    ss_total = np.sum((targets - mean) ** 2)
-    ss_residual = np.sum((preds - targets) ** 2)
-    return 1 - (ss_residual / ss_total)
+    mean = torch.mean(targets)
+    ss_total = torch.sum((targets - mean) ** 2)
+    ss_residual = torch.sum((preds - targets) ** 2)
+    return 1 - (ss_residual / ss_total).item()
 
 def accuracy(*, preds, targets, **_):
     return float((preds == targets).mean())
 
 def precision(*, preds, targets, **_):
-    tp = np.sum((preds == 1) & (targets == 1))
-    fp = np.sum((preds == 1) & (targets == 0))
-    return tp / (tp + fp + EPS)
+    tp = torch.sum((preds == 1) & (targets == 1))
+    fp = torch.sum((preds == 1) & (targets == 0))
+    return (tp / (tp + fp + EPS)).item()
 
 def recall(*, preds, targets, **_):
-    tp = np.sum((preds == 1) & (targets == 1))
-    fn = np.sum((preds == 0) & (targets == 1))
-    return tp / (tp + fn + EPS)
+    tp = torch.sum((preds == 1) & (targets == 1))
+    fn = torch.sum((preds == 0) & (targets == 1))
+    return (tp / (tp + fn + EPS)).item()
 
 def f1_score(*, preds, targets, **_):
     p = precision(preds=preds, targets=targets)
@@ -43,7 +43,8 @@ BUILTIN_METRICS = {
             direction="min",
             description="Mean squared error",
         ),
-        fn = mean_squared_error
+        fn = mean_squared_error,
+        reduce="avg"
     ),
     "rmse": Metric(
         spec=MetricSpec(
@@ -51,7 +52,8 @@ BUILTIN_METRICS = {
             direction="min",
             description="Root mean squared error",
         ),
-        fn = root_mean_squared_error
+        fn = root_mean_squared_error,
+        reduce="avg"
     ),
     "mae": Metric(
         spec=MetricSpec(
@@ -59,7 +61,8 @@ BUILTIN_METRICS = {
             direction="min",
             description="Mean absolute error",
         ),
-        fn = mean_absolute_error
+        fn = mean_absolute_error,
+        reduce="avg"
     ),
     "r2": Metric(
         spec=MetricSpec(
@@ -67,7 +70,8 @@ BUILTIN_METRICS = {
             direction="max",
             description="Determination coefficient (R^2)",
         ),
-        fn = r_squared
+        fn = r_squared,
+        reduce="avg"
     ),
     "accuracy": Metric(
         spec=MetricSpec(
@@ -76,6 +80,7 @@ BUILTIN_METRICS = {
             description="Classification accuracy",
         ),
         fn = accuracy,
+        reduce="avg"
     ),
     "precision": Metric(
         spec=MetricSpec(
@@ -84,6 +89,7 @@ BUILTIN_METRICS = {
             description="Classification precision",
         ),
         fn = precision,
+        reduce="avg"
     ),
     "recall": Metric(
         spec=MetricSpec(
@@ -92,6 +98,7 @@ BUILTIN_METRICS = {
             description="Classification recall",
         ),
         fn = recall,
+        reduce="avg"
     ),
     "f1": Metric(
         spec=MetricSpec(
@@ -100,5 +107,6 @@ BUILTIN_METRICS = {
             description="Classification F1-score",
         ),
         fn = f1_score,
+        reduce="avg"
     ),
 }

@@ -80,7 +80,7 @@ class EpochResultBuilder:
             if not isinstance(k, str):
                 raise ValueError("Metric name must be str")
             if not isinstance(v, (int, float)):
-                raise ValueError(f"Metric {k} must be numeric")
+                raise ValueError(f"Metric {k} = {v} must be numeric, found {type(v)}")
 
             if k not in self._storage:
                 self._storage[k] = []

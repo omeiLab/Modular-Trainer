@@ -2,8 +2,10 @@ import torch
 from torch.utils.data import DataLoader
 from torch.nn import Module
 from torch.optim.optimizer import Optimizer
+from typing import Callable, List
+
 from src.trainer.result_builder import EpochResultBuilder
-from typing import Callable
+from src.metrics.database import MetricDB
 
 class Runner:
     """
@@ -25,7 +27,9 @@ class Runner:
         loss_fn: Callable,
         train_loader: DataLoader,
         val_loader: DataLoader,
+        metrics: List[str],
         result_builder: EpochResultBuilder,
+        metric_db: MetricDB
     ):
         """
         Initialize the Runner.
@@ -37,19 +41,22 @@ class Runner:
             train_loader (torch.utils.data.DataLoader): Training data loader.
             val_loader (torch.utils.data.DataLoader): Validation data loader.
             result_builder (EpochResultBuilder): Builder to record metrics.
+            metric_db (MetricDB): Database of metrics to record.
         """
         self.model = model
         self.optimizer = optimizer
         self.loss_fn = loss_fn
         self.train_loader = train_loader
         self.val_loader = val_loader
+        self.metrics = metrics
         self.result_builder = result_builder
+        self.metric_db = metric_db
 
         # Move model to device
         self.device = next(model.parameters()).device
         self.model.to(self.device)
 
-    def _train_one_epoch(self):
+    def _train_one_epoch(self) -> None:
         """
         Run one epoch of training.
 
@@ -57,7 +64,6 @@ class Runner:
             dict: Training metrics (currently 'train_loss').
         """
         self.model.train()
-        total_loss = 0
         for batch in self.train_loader:
             inputs, targets = batch
             inputs, targets = inputs.to(self.device), targets.to(self.device)
@@ -66,11 +72,9 @@ class Runner:
             loss = self.loss_fn(outputs, targets)
             loss.backward()
             self.optimizer.step()
-            total_loss += loss.item()
-        avg_train_loss = total_loss / len(self.train_loader)
-        return {'train_loss': avg_train_loss}
+            self.result_builder.record({'train_loss': loss.item()})
 
-    def _validate_one_epoch(self):
+    def _validate_one_epoch(self) -> None:
         """
         Run one epoch of validation.
 
@@ -78,16 +82,22 @@ class Runner:
             dict: Validation metrics (currently 'val_loss').
         """
         self.model.eval()
-        total_loss = 0
+        result = {}
         with torch.no_grad():
             for batch in self.val_loader:
                 inputs, targets = batch
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
-                outputs = self.model(inputs)
-                loss = self.loss_fn(outputs, targets)
-                total_loss += loss.item()
-        avg_val_loss = total_loss / len(self.val_loader)
-        return {'val_loss': avg_val_loss}
+                preds = self.model(inputs)
+                loss = self.loss_fn(preds, targets)
+                
+                # record metrics
+                result = {}
+                result['val_loss'] = loss.item()
+                for metric in self.metrics:
+                    metric_fn = self.metric_db.get(metric).fn
+                    metric_val = metric_fn(preds=preds, targets=targets)
+                    result[metric] = metric_val
+                self.result_builder.record(result)
 
     def run_one_epoch(self):
         """
@@ -98,7 +108,5 @@ class Runner:
         """
         self.result_builder.reset()
         train_metrics = self._train_one_epoch()
-        self.result_builder.record(train_metrics)
         val_metrics = self._validate_one_epoch()
-        self.result_builder.record(val_metrics)
         return self.result_builder.build()

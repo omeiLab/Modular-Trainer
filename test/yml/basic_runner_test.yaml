@@ -1,16 +1,18 @@
 trainer:
   num_epochs: 10
 
+metrics:
+  - rmse
+  - mae
+
 log:
   verbose: 1
 
 early_stop:
-  enabled: true
   metric: val_loss
   patience: 3
   min_delta: 0.0001
 
 checkpoint:
-  enabled: true
   metric: val_loss
-  min_delta: 0.0
+  min_delta: 0.0001

@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import Literal, Optional, Callable
+from typing import Literal, Optional, Callable, Dict
 
 OptimizeDirection = Literal["min", "max"]
+Reducer = Literal['avg', 'min', 'max', 'last', 'sum']
 
 @dataclass(frozen=True)
 class MetricSpec:
@@ -13,9 +14,10 @@ class MetricSpec:
 class Metric:
     spec: MetricSpec
     fn: Callable[..., float]
+    reduce: Reducer
     
 class MetricDB:
-    def __init__(self, metrics: dict[str, Metric]):
+    def __init__(self, metrics: Dict[str, Metric]):
         self._metrics = metrics
 
     def get(self, name: str) -> Metric:

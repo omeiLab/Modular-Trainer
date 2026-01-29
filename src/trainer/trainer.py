@@ -12,10 +12,12 @@ from src.trainer.config import TrainerConfig
 from src.control.controller import Controller
 from src.hooks.before_epoch.base import CompositeBeforeEpochHook
 from src.hooks.after_epoch.base import CompositeAfterEpochHook
-from src.hooks.after_epoch.early_stop import AfterEpochEarlyStopHook, EarlyStopConfig
-from src.hooks.after_epoch.logger import AfterEpochLoggerHook, LoggerConfig
-from src.hooks.after_epoch.checkpoint import AfterEpochCheckpointHook, CheckpointConfig
+from src.hooks.after_epoch.early_stop import AfterEpochEarlyStopHook
+from src.hooks.after_epoch.logger import AfterEpochLoggerHook
+from src.hooks.after_epoch.checkpoint import AfterEpochCheckpointHook
 from src.hooks.after_step.base import CompositeAfterStepHook
+from src.metrics.database import MetricDB
+from src.metrics.builtin import BUILTIN_METRICS
 
 class Trainer:
     """
@@ -50,7 +52,9 @@ class Trainer:
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.config_path = config_path
+        self.metric_db = MetricDB(BUILTIN_METRICS)
         self.generate_config()
+        self.build()
 
     def generate_config(self) -> None:
         """
@@ -66,18 +70,33 @@ class Trainer:
         if self.config_path:
             config = config.from_yaml(self.config_path)
             
+        # metrics
+        self.metrics = config.metrics
+            
         # LoggerConfig
-        self.log_config = LoggerConfig(verbose=config.verbose)
+        self.log_config = config.log
         
         # EarlyStopConfig
-        self.es_config = EarlyStopConfig(patience=config.early_stop_patience, metric=config.early_stop_metric, min_delta=config.early_stop_min_delta)
+        self.es_config = config.early_stop
         
         # CheckpointConfig
-        self.ckpt_config = CheckpointConfig(metric=config.checkpoint_metric, min_delta=config.checkpoint_min_delta)
+        self.ckpt_config = config.checkpoint
         
         # Other hyperparameters
         self.num_epochs = config.num_epochs
-                
+        
+        # validate metrics
+        self.validate_metrics()
+        
+    def validate_metrics(self):
+        """
+        Check all the metrics are existed in MetricDB.
+        """
+        all_metrics = self.metrics + [self.es_config.metric, self.ckpt_config.metric]
+        for metric in all_metrics:
+            if not self.metric_db.has(metric) and "loss" not in metric:
+                raise KeyError(f"The metric {metric} does not exist in MetricDB.")
+        
     def build(self) -> None:
         """
         Construct hooks, result builder, runner, and training loop.
@@ -122,11 +141,14 @@ class Trainer:
 
         # EpochResultBuilder
         result_builder = EpochResultBuilder()
+        for metric in self.metrics:
+            reduce = self.metric_db.get(metric).reduce
+            result_builder.register(metric, reduce)
 
         # Runner
         runner = Runner(
-            self.model, self.optimizer, self.loss_fn,
-            self.train_loader, self.val_loader, result_builder
+            self.model, self.optimizer, self.loss_fn, self.train_loader, self.val_loader, 
+            self.metrics, result_builder, self.metric_db
         )
 
         # Trainer loop

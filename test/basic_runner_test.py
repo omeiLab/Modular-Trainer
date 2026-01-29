@@ -1,4 +1,4 @@
-from trainer.trainer import build_trainer
+from src.trainer.trainer import Trainer
 from test.dataset import ToyRegressionDataset, create_dataloader
 from test.model import SimpleDenseModel
 import torch
@@ -18,14 +18,16 @@ model = SimpleDenseModel(input_dim=10)
 optimizer = optim.Adam(model.parameters(), lr=1e-2)
 loss_fn = nn.MSELoss()
 
-model = build_trainer(
+trainer = Trainer(
     model=model,
     optimizer=optimizer,
     loss_fn=loss_fn,
     train_loader=train_loader,
     val_loader=val_loader,
-    num_epochs=10,
+    config_path="test/yml/basic_runner_test.yaml"
 )
+
+trainer.run()
 
 # sanity check
 model.eval()
