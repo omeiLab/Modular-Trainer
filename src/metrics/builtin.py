@@ -19,7 +19,7 @@ def r_squared(*, preds, targets, **_):
     return 1 - (ss_residual / ss_total).item()
 
 def accuracy(*, preds, targets, **_):
-    return float((preds == targets).mean())
+    return float((preds == targets).sum() / len(preds))
 
 def precision(*, preds, targets, **_):
     tp = torch.sum((preds == 1) & (targets == 1))
