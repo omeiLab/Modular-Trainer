@@ -7,7 +7,7 @@ from dataclasses import dataclass
 @dataclass
 class EarlyStopConfig:
     patience: int = 0
-    metric: str = "loss"
+    metric: str = "val_loss"
     maximize: bool = False
     min_delta: float = 0.0
     

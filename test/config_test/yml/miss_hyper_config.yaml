@@ -1,0 +1,17 @@
+trainer:
+  num_epochs: 15
+
+metrics:
+  - rmse
+  - mae
+  - r2
+
+log:
+  verbose: 1
+
+early_stop:
+  metric: val_loss
+  patience: 4
+
+checkpoint:
+  metric: val_loss

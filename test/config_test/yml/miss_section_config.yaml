@@ -1,0 +1,13 @@
+trainer:
+  num_epochs: 10
+
+metrics:
+  - rmse
+  - mae
+
+log:
+  verbose: 1
+
+checkpoint:
+  metric: val_loss
+  min_delta: 0.0001
