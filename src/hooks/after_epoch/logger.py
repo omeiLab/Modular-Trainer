@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 @dataclass
 class LoggerConfig:
+    metric: str = "val_loss"    # support only 1 metric for now
     verbose: int = 1
     
     def enabled(self) -> bool:
@@ -17,8 +18,11 @@ class AfterEpochLoggerHook(AfterEpochHook):
     if it exists in the step_result dictionary. It does not modify the 
     training loop or step results.
     """
+    def __init___(self, metric: str = "val_loss"):
+        self.metric = metric
+        
     def execute(self, epoch: int, results: Mapping[str, Any]) -> None:
-        if "val_loss" in results:
-            print(f"[LOG] loss: {results['val_loss']}")
+        if self.metric in results:
+            print(f"[LOG] {self.metric}: {results[self.metric]}")
         else:
-            print("No loss value found in results")
+            raise ValueError(f"Metric {self.metric} not found in results")

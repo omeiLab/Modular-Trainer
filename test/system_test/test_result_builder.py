@@ -16,7 +16,7 @@ def test_build(create_builder):
     result = builder.build()
     
     assert result['loss'] == 0.1
-    assert result['accuracy'] == 0.7
+    assert result['accuracy'] == 0.7 
     
 def test_reset(create_builder):
     builder = create_builder
