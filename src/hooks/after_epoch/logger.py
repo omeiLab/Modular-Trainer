@@ -18,7 +18,7 @@ class AfterEpochLoggerHook(AfterEpochHook):
     if it exists in the step_result dictionary. It does not modify the 
     training loop or step results.
     """
-    def __init___(self, metric: str = "val_loss"):
+    def __init__(self, metric: str = "val_loss"):
         self.metric = metric
         
     def execute(self, epoch: int, results: Mapping[str, Any]) -> None:
