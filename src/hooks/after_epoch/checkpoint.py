@@ -28,8 +28,8 @@ class AfterEpochCheckpointHook(AfterEpochHook):
     def __init__(
         self,
         model: nn.Module,
-        metric: str,
-        maximize: bool = True,
+        metric: str = "val_loss",
+        maximize: bool = False,
         min_delta: float = 0.0,
     ):
         """
