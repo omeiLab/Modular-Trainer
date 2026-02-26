@@ -2,7 +2,6 @@ from src.hooks.before_epoch.base import CompositeBeforeEpochHook
 from src.hooks.after_step.base import CompositeAfterStepHook
 from src.hooks.after_epoch.base import CompositeAfterEpochHook
 from src.control.controller import Controller
-from src.trainer.result_builder import EpochResultBuilder 
 from src.trainer.runner import Runner
 from typing import Mapping, Any
 
@@ -25,7 +24,6 @@ class TrainerLoop:
         after_epoch_hook: CompositeAfterEpochHook, 
         control: Controller,
         runner: Runner,
-        result_builder: EpochResultBuilder
     ):
         """
         Initialize the TrainerLoop with hooks, a controller, a Runner, and a result builder.
@@ -36,14 +34,12 @@ class TrainerLoop:
             after_epoch_hook (CompositeAfterEpochHook): Hooks to execute after each epoch with aggregated results.
             control (Controller): Controller object to query for early stopping or other stop criteria.
             runner (Runner): Runner object responsible for executing one epoch of train + validation.
-            result_builder (EpochResultBuilder): Builder to record and aggregate metrics per epoch.
         """
         self.before_epoch_hook = before_epoch_hook
         self.after_step_hook = after_step_hook
         self.after_epoch_hook = after_epoch_hook
         self.control = control
         self.runner = runner
-        self.result_builder = result_builder
     
     def run(self, num_epochs: int) -> None:
         """
@@ -51,11 +47,8 @@ class TrainerLoop:
 
         Args:
             num_epochs (int): Number of epochs to run.
-            steps_per_epoch (int): Number of steps per epoch. 
-                                   (Currently unused since Runner handles batching.)
         """
         for epoch in range(num_epochs):
-            self.result_builder.reset()
             self.before_epoch_hook.execute(epoch)
             results = self._run_epoch()
             self.after_epoch_hook.execute(epoch, results)

@@ -8,6 +8,7 @@ import yaml
 from src.trainer.loop import TrainerLoop
 from src.trainer.runner import Runner
 from src.trainer.result_builder import EpochResultBuilder
+from src.trainer.result_computer import EpochResultComputer
 from src.trainer.config import TrainerConfig
 from src.control.controller import Controller
 from src.hooks.before_epoch.base import CompositeBeforeEpochHook
@@ -139,16 +140,20 @@ class Trainer:
         after_epoch_hooks_lst.append(checkpoint_hook)
         after_epoch_hooks = CompositeAfterEpochHook(after_epoch_hooks_lst)
 
+        # EpochResultComputer
+        result_computer = EpochResultComputer(self.metric_db)
+
         # EpochResultBuilder
-        result_builder = EpochResultBuilder()
+        result_builder = EpochResultBuilder(result_computer)
+        result_builder.register("train_loss")
+        result_builder.register("val_loss")
         for metric in self.metrics:
-            reduce = self.metric_db.get(metric).reduce
-            result_builder.register(metric, reduce)
+            result_builder.register(metric)
 
         # Runner
         runner = Runner(
             self.model, self.optimizer, self.loss_fn, self.train_loader, self.val_loader, 
-            self.metrics, result_builder, self.metric_db
+            self.metrics, result_builder, result_computer, self.metric_db
         )
 
         # Trainer loop
@@ -158,7 +163,6 @@ class Trainer:
             after_epoch_hooks,
             controller,
             runner,
-            result_builder
         )
 
     def run(self) -> nn.Module:
