@@ -138,6 +138,6 @@ class EpochResultComputer:
                     "but no step data was recorded."
                 )
 
-            results[name] = float(metric_fn(preds=preds, targets=targets))
+            results[name] = metric_fn(preds=preds, targets=targets)
 
         return results
