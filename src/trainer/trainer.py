@@ -144,7 +144,7 @@ class Trainer:
         result_computer = EpochResultComputer(self.metric_db)
 
         # EpochResultBuilder
-        result_builder = EpochResultBuilder()
+        result_builder = EpochResultBuilder(result_computer)
         result_builder.register("train_loss")
         result_builder.register("val_loss")
         for metric in self.metrics:
