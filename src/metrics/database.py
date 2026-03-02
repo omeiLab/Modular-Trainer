@@ -2,19 +2,19 @@ from dataclasses import dataclass
 from typing import Literal, Optional, Callable, Dict
 
 OptimizeDirection = Literal["min", "max"]
-Reducer = Literal['avg', 'min', 'max', 'last', 'sum']
+InputType = Literal["logits", "probability", "hard_label"]
 
 @dataclass(frozen=True)
 class MetricSpec:
     name: str
     direction: OptimizeDirection
+    input: InputType
     description: Optional[str] = None
 
 @dataclass(frozen=True)
 class Metric:
     spec: MetricSpec
     fn: Callable[..., float]
-    reduce: Reducer
     
 class MetricDB:
     def __init__(self, metrics: Dict[str, Metric]):

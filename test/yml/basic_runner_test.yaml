@@ -1,5 +1,6 @@
 trainer:
   num_epochs: 10
+  task: regression
 
 metrics:
   - rmse

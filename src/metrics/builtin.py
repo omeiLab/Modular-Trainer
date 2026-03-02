@@ -41,72 +41,72 @@ BUILTIN_METRICS = {
         spec=MetricSpec(
             name="mse",
             direction="min",
+            input="logits",
             description="Mean squared error",
         ),
         fn = mean_squared_error,
-        reduce="avg"
     ),
     "rmse": Metric(
         spec=MetricSpec(
             name="rmse",
             direction="min",
+            input="logits",
             description="Root mean squared error",
         ),
         fn = root_mean_squared_error,
-        reduce="avg"
     ),
     "mae": Metric(
         spec=MetricSpec(
             name="mae",
             direction="min",
+            input="logits",
             description="Mean absolute error",
         ),
         fn = mean_absolute_error,
-        reduce="avg"
     ),
     "r2": Metric(
         spec=MetricSpec(
             name="r2",
             direction="max",
+            input="logits",
             description="Determination coefficient (R^2)",
         ),
         fn = r_squared,
-        reduce="avg"
     ),
     "accuracy": Metric(
         spec=MetricSpec(
             name="accuracy",
             direction="max",
+            input="hard_label",
             description="Classification accuracy",
         ),
         fn = accuracy,
-        reduce="avg"
     ),
     "precision": Metric(
         spec=MetricSpec(
             name="precision",
             direction="max",
+            input="hard_label",
             description="Classification precision",
         ),
         fn = precision,
-        reduce="avg"
     ),
     "recall": Metric(
         spec=MetricSpec(
             name="recall",
             direction="max",
+            input="hard_label",
             description="Classification recall",
         ),
         fn = recall,
-        reduce="avg"
     ),
     "f1": Metric(
         spec=MetricSpec(
             name="f1",
             direction="max",
+            input="hard_label",
             description="Classification F1-score",
         ),
         fn = f1_score,
-        reduce="avg"
     ),
 }

@@ -85,6 +85,7 @@ class Trainer:
         
         # Other hyperparameters
         self.num_epochs = config.num_epochs
+        self.task_type = config.task
         
         # validate metrics
         self.validate_metrics()

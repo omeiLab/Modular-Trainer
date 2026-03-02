@@ -36,7 +36,7 @@ class EpochResultComputer:
         results = computer.compute_all(metric_names)
     """
 
-    def __init__(self, metric_db: MetricDB):
+    def __init__(self, metric_db: MetricDB, task_type: str = "regression"):
         """
         Initialize the EpochResultComputer.
 
@@ -47,6 +47,7 @@ class EpochResultComputer:
                     fn(preds: torch.Tensor, targets: torch.Tensor) -> float
         """
         self.metric_db = metric_db
+        self.task_type = task_type
         self.reset()
 
     def reset(self) -> None:
@@ -58,6 +59,7 @@ class EpochResultComputer:
         self._preds: List[torch.Tensor] = []
         self._targets: List[torch.Tensor] = []
         self._losses: Dict[str, List[float]] = {}
+        self._buffer: Dict[str, torch.Tensor] = {}
 
     def record_step(self, preds: torch.Tensor, targets: torch.Tensor) -> None:
         """
@@ -130,6 +132,7 @@ class EpochResultComputer:
 
             # Other metrics from MetricDB
             metric_entry = self.metric_db.get(name)
+            metric_input = metric_entry.spec.input
             metric_fn = metric_entry.fn
 
             if preds is None or targets is None:
@@ -137,7 +140,58 @@ class EpochResultComputer:
                     f"Metric '{name}' requires predictions and targets, "
                     "but no step data was recorded."
                 )
+            
+            # transform preds to the required input format for the metric function
+            if metric_input == "probability":
+                preds = self.logit2proba(preds, task=self.task_type)
+            elif metric_input == "hard_label":
+                preds = self.logit2label(preds, task=self.task_type)
 
             results[name] = metric_fn(preds=preds, targets=targets)
 
         return results
+    
+    def logit2proba(self, logits: torch.Tensor, task: str = "binary") -> torch.Tensor:
+        """
+        Convert logits to probabilities using sigmoid or softmax.
+
+        This is a utility function that can be used by metric functions
+        that require probability inputs.
+
+        Args:
+            logits (torch.Tensor):
+                Logits tensor of shape (batch_size, num_classes).
+
+        Returns:
+            torch.Tensor:
+                Probability tensor of shape (batch_size, num_classes).
+        """
+        if self._buffer.get("probability") is not None:
+            return self._buffer["probability"]
+        
+        proba = torch.sigmoid(logits) if task == "binary" else torch.softmax(logits, dim=-1)
+        self._buffer["probability"] = proba
+        return proba
+    
+    def logit2label(self, logits: torch.Tensor, task: str = "binary", threshold: float = 0.5) -> torch.Tensor:
+        """
+        Convert logits to hard labels. It must be converted to probability first.
+
+        For binary classification, applies a threshold of 0.5.
+        For multiclass classification, takes the argmax.
+
+        Args:
+            probs (torch.Tensor):
+                Probability tensor of shape (batch_size, num_classes).
+
+        Returns:
+            torch.Tensor:
+                Hard label tensor of shape (batch_size,).
+        """
+        if self._buffer.get("hard_label") is not None:
+            return self._buffer["hard_label"]
+        
+        proba = self.logit2prob(logits)
+        labels = (proba >= threshold).long() if task == "binary" else torch.argmax(proba, dim=-1)
+        self._buffer["hard_label"] = labels
+        return labels
