@@ -21,19 +21,19 @@ DUMMY_METRICS = {
         spec=MetricSpec(
             name="pos",
             direction="min",
+            input="logits",
             description="Generate random positive floating number",
         ),
         fn = positive,
-        reduce="avg"
     ),
     "neg": Metric(
         spec=MetricSpec(
             name="neg",
             direction="max",
+            input="probability",
             description="Generate a random negative floating number",
         ),
         fn = negative,
-        reduce="avg"
     ),
 }
 
@@ -46,8 +46,8 @@ def test_get(metric_db):
     neg_metric = metric_db.get("neg")
     assert pos_metric.spec.name == "pos"
     assert pos_metric.spec.direction == "min"
+    assert pos_metric.spec.input == "logits"
     assert pos_metric.spec.description == "Generate random positive floating number"
-    assert pos_metric.reduce == "avg"
     for _ in range(10):
         assert pos_metric.fn() >= 0
         assert neg_metric.fn() <= 0

@@ -12,10 +12,10 @@ DUMMY_METRICS = {
         spec=MetricSpec(
             name="accuracy",
             direction="max",
+            input="hard_label",
             description="Classification accuracy",
         ),
         fn = accuracy,
-        reduce="avg"
     )
 }
 db = MetricDB(DUMMY_METRICS)
