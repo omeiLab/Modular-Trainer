@@ -25,6 +25,9 @@ class MetricDB:
             return self._metrics[name]
         except KeyError:
             raise KeyError(f"Unknown metric: {name}")
+        
+    def get_direction(self, name: str) -> OptimizeDirection:
+        return self.get(name).spec.direction
 
     def has(self, name: str) -> bool:
         return name in self._metrics

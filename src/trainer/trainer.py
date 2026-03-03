@@ -127,7 +127,7 @@ class Trainer:
                 controller=controller,
                 patience=self.es_config.patience,
                 metric=self.es_config.metric,
-                maximize=self.es_config.maximize,
+                maximize=self.metric_db.get_direction(self.es_config.metric) == "max",
                 min_delta=self.es_config.min_delta
             )
             after_epoch_hooks_lst.append(early_stop_hook)
@@ -135,7 +135,7 @@ class Trainer:
         checkpoint_hook = AfterEpochCheckpointHook(
             model=self.model,
             metric=self.ckpt_config.metric,
-            maximize=self.ckpt_config.maximize,
+            maximize=self.metric_db.get_direction(self.ckpt_config.metric) == "max",
             min_delta=self.ckpt_config.min_delta
         )
         after_epoch_hooks_lst.append(checkpoint_hook)
