@@ -191,7 +191,7 @@ class EpochResultComputer:
         if self._buffer.get("hard_label") is not None:
             return self._buffer["hard_label"]
         
-        proba = self.logit2prob(logits)
+        proba = self.logit2proba(logits)
         labels = (proba >= threshold).long() if task == "binary" else torch.argmax(proba, dim=-1)
         self._buffer["hard_label"] = labels
         return labels

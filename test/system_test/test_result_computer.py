@@ -21,16 +21,18 @@ DUMMY_METRICS = {
 db = MetricDB(DUMMY_METRICS)
 
 @pytest.fixture
-def generate_data():
-    true  = torch.tensor([1, 0, 0, 0, 0, 0, 1, 1, 1, 0])
-    preds = torch.tensor([0, 1, 1, 0, 1, 0, 0, 1, 1, 0])
-    return true, preds
+def generate_computer():
+    true  = torch.Tensor([  1,   0,   0,   0,   0,     0,    1,    1,    1,   0])
+    preds = torch.Tensor([0.1, 0.9, 0.8, 0.2, 0.95, 0.12, 0.13, 0.99, 0.76, 0.4])
 
-@pytest.fixture
-def generate_computer(generate_data):
-    true_tensor, pred_tensor = generate_data
-    computer = EpochResultComputer(db)
-    computer.record_step(preds=pred_tensor, targets=true_tensor)
+    computer = EpochResultComputer(db, task_type="binary")
+    computer.record_step(preds=preds, targets=true)
+
+    # override logit2label --> prob2label for testing
+    def prob2label(probs: torch.Tensor, task: str = "binary", threshold: float = 0.5) -> torch.Tensor:
+        return (probs >= threshold).long()
+    computer.logit2label = prob2label
+
     return computer
 
 def test_compute_accuracy(generate_computer):
