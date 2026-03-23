@@ -165,6 +165,9 @@ The Modular Trainer currently supports the following built-in metrics:
 | | `precision` | Precision |
 | | `recall` | Recall |
 | | `f1` | F1-Score |
+| | `roc-auc` | Receiver Operating Characteristic Area Under Curve |
+| | `pr-auc` | Precision-Recall Area Under Curve |
+| | `log-loss` | Cross-Entropy Logarithm Loss |
 
 ---
 
