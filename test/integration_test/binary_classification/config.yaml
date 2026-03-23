@@ -1,0 +1,22 @@
+trainer:
+    num_epochs: 50      # total training epochs
+    task: binary        # setting task to binary classification
+
+metrics:                # metrics retrieved from MetricDB
+    - accuracy          # built-in binary metric: (TP+TN)/Total
+    - f1                # built-in binary metric: 2 * (Prec * Rec) / (Prec + Rec)
+    - precision         # built-in binary metric: TP / (TP + FP)
+    - recall            # built-in binary metric: TP / (TP + FN)
+
+log:
+    metric: val_loss    # metric to display in terminal
+    verbose: 1          # enable logging output
+
+early_stop:             # monitor validation loss to prevent overfitting
+    patience: 5         # stop if val_loss doesn't improve for 5 epochs
+    metric: val_loss    
+    min_delta: 0.001    # threshold to qualify as an improvement
+
+checkpoint:             # save the best model based on F1-Score
+    metric: f1          # higher F1 is better
+    min_delta: 0.01

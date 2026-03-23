@@ -1,6 +1,6 @@
 from src.trainer.trainer import Trainer
-from test.dataset import ToyRegressionDataset, create_dataloader
-from test.model import SimpleDenseModel
+from test.integration_test.regression.dataset import ToyRegressionDataset, create_dataloader
+from test.integration_test.regression.model import SimpleDenseModel
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -24,7 +24,7 @@ trainer = Trainer(
     loss_fn=loss_fn,
     train_loader=train_loader,
     val_loader=val_loader,
-    config_path="test/yml/basic_runner_test.yaml"
+    config_path="test/integration_test/regression/config.yaml"
 )
 
 trainer.run()

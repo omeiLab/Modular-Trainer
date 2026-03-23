@@ -27,6 +27,8 @@ class MetricDB:
             raise KeyError(f"Unknown metric: {name}")
         
     def get_direction(self, name: str) -> OptimizeDirection:
+        if 'loss' in name:
+            return "min"
         return self.get(name).spec.direction
 
     def has(self, name: str) -> bool:
